@@ -3,10 +3,10 @@
 #include "utils.h"
 
 /*****************************************************************************
-* b64_encode: Stolen from VLC's http.c.
-* Simplified by Michael.
-* Fixed edge cases and made it work from data (vs. strings) by Ryan.
-*****************************************************************************/
+ * b64_encode: Stolen from VLC's http.c.
+ * Simplified by Michael.
+ * Fixed edge cases and made it work from data (vs. strings) by Ryan.
+ *****************************************************************************/
 static char *base64_encode(char *out, int out_size, const uint8_t *in, int in_size)
 {
 	static const char b64[] =
@@ -120,7 +120,7 @@ const uint8_t *rtsp_find_aac_adts(const uint8_t *buff, int len, int *size)
 	if (len <= 2)
 		return NULL;
 
-	//aac_frame_length
+	// aac_frame_length
 	*size = 0;
 	*size |= (s[3] & 3) << 11;
 	*size |= (s[4] << 3);
@@ -159,12 +159,12 @@ int rtsp_codec_data_parse_from_user_h264(const uint8_t *codec_data, int data_len
 
 		if (frame[2] == 0)
 		{
-			frame += 4; //drop 0001
+			frame += 4; // drop 0001
 			size -= 4;
 		}
 		else
 		{
-			frame += 3; //drop 001
+			frame += 3; // drop 001
 			size -= 3;
 		}
 
@@ -219,12 +219,12 @@ int rtsp_codec_data_parse_from_user_h265(const uint8_t *codec_data, int data_len
 
 		if (frame[2] == 0)
 		{
-			frame += 4; //drop 0001
+			frame += 4; // drop 0001
 			size -= 4;
 		}
 		else
 		{
-			frame += 3; //drop 001
+			frame += 3; // drop 001
 			size -= 3;
 		}
 
@@ -488,5 +488,17 @@ int rtsp_build_sdp_media_attr_aac(int pt, int sample_rate, const struct codec_da
 	{
 		p += sprintf(p, "a=fmtp:%d profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3\r\n", pt);
 	}
+	return (p - sdpbuf);
+}
+
+int rtsp_build_sdp_media_attr_opus(int pt, int sample_rate, char *sdpbuf, int maxlen)
+{
+	char *p = sdpbuf;
+	//	dbg("\n");
+
+	p += sprintf(p, "m=audio 0 RTP/AVP %d\r\n", pt);
+	p += sprintf(p, "c=IN IP4 0.0.0.0\r\n");
+	p += sprintf(p, "a=rtpmap:%d OPUS/%d/2\r\n", pt, sample_rate);
+
 	return (p - sdpbuf);
 }

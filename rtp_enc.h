@@ -21,6 +21,7 @@ extern "C"
 	int rtp_enc_aac(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t *packets[], int pktsizs[]);
 	int rtp_enc_g711(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t *packets[], int pktsizs[]);
 	int rtp_enc_g726(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t *packets[], int pktsizs[]);
+	int rtp_enc_opus(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t *packets[], int pktsizs[]);
 
 #ifdef __cplusplus
 }

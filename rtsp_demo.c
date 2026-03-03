@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include "comm.h"
-#include "rtsp_demo.h"
+#include "rtsp_server.h"
 #include "rtsp_msg.h"
 #include "rtp_enc.h"
 #include "queue.h"
@@ -13,8 +13,8 @@
 #include "utils.h"
 #include "md5.h"
 
-//TODO LIST 20160529
-//support authentication
+// TODO LIST 20160529
+// support authentication
 
 #define REALM "rtsp_demo"
 
@@ -101,12 +101,12 @@ struct rtsp_session
 struct rtp_connection
 {
 	int is_over_tcp;
-	SOCKET tcp_sockfd;		   //if is_over_tcp=1. rtsp socket
-	int tcp_interleaved[2];	   //if is_over_tcp=1. [0] is rtp interleaved, [1] is rtcp interleaved
-	SOCKET udp_sockfd[2];	   //if is_over_tcp=0. [0] is rtp socket, [1] is rtcp socket
-	uint16_t udp_localport[2]; //if is_over_tcp=0. [0] is rtp local port, [1] is rtcp local port
-	uint16_t udp_peerport[2];  //if is_over_tcp=0. [0] is rtp peer port, [1] is rtcp peer port
-	struct in_addr peer_addr;  //peer ipv4 addr
+	SOCKET tcp_sockfd;		   // if is_over_tcp=1. rtsp socket
+	int tcp_interleaved[2];	   // if is_over_tcp=1. [0] is rtp interleaved, [1] is rtcp interleaved
+	SOCKET udp_sockfd[2];	   // if is_over_tcp=0. [0] is rtp socket, [1] is rtcp socket
+	uint16_t udp_localport[2]; // if is_over_tcp=0. [0] is rtp local port, [1] is rtcp local port
+	uint16_t udp_peerport[2];  // if is_over_tcp=0. [0] is rtp peer port, [1] is rtcp peer port
+	struct in_addr peer_addr;  // peer ipv4 addr
 	int streamq_index;
 	uint32_t ssrc;
 	uint32_t rtcp_packet_count;
@@ -121,15 +121,15 @@ struct rtp_connection
 
 struct rtsp_client_connection
 {
-	int state; //session state
+	int state; // session state
 #define RTSP_CC_STATE_INIT 0
 #define RTSP_CC_STATE_READY 1
 #define RTSP_CC_STATE_PLAYING 2
 #define RTSP_CC_STATE_RECORDING 3
 
-	SOCKET sockfd;			  //rtsp client socket
-	struct in_addr peer_addr; //peer ipv4 addr
-	unsigned long session_id; //session id
+	SOCKET sockfd;			  // rtsp client socket
+	struct in_addr peer_addr; // peer ipv4 addr
+	unsigned long session_id; // session id
 
 	char reqbuf[1024];
 	int reqlen;
@@ -147,7 +147,7 @@ struct rtsp_client_connection
 
 struct rtsp_demo
 {
-	SOCKET sockfd; //rtsp server socket 0:invalid
+	SOCKET sockfd; // rtsp server socket 0:invalid
 	struct rtsp_session_queue_head sessions_qhead;
 	struct rtsp_client_connection_queue_head connections_qhead;
 };
@@ -241,7 +241,7 @@ static void __client_connection_unbind_session(struct rtsp_client_connection *cc
 	}
 }
 
-rtsp_demo_handle rtsp_new_demo(int port)
+rtsp_demo_handle rtsp_new_demo(const char *addr, int port)
 {
 	struct rtsp_demo *d = NULL;
 	struct sockaddr_in inaddr;
@@ -272,7 +272,7 @@ rtsp_demo_handle rtsp_new_demo(int port)
 
 	memset(&inaddr, 0, sizeof(inaddr));
 	inaddr.sin_family = AF_INET;
-	inaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	inaddr.sin_addr.s_addr = inet_addr(addr);
 	inaddr.sin_port = htons(port);
 	ret = bind(sockfd, (struct sockaddr *)&inaddr, sizeof(inaddr));
 	if (ret == SOCKET_ERROR)
@@ -283,7 +283,7 @@ rtsp_demo_handle rtsp_new_demo(int port)
 		return NULL;
 	}
 
-	ret = listen(sockfd, 128); //XXX
+	ret = listen(sockfd, 128); // XXX
 	if (ret == SOCKET_ERROR)
 	{
 		err("listen socket failed : %s\n", sk_strerror(sk_errno()));
@@ -349,7 +349,7 @@ static int rtsp_set_client_socket(SOCKET sockfd)
 	memset(&ling, 0, sizeof(ling));
 	ling.l_onoff = 1;
 	ling.l_linger = 0;
-	ret = setsockopt(sockfd, SOL_SOCKET, SO_LINGER, (const char *)&ling, sizeof(ling)); //resolve too many TCP CLOSE_WAIT
+	ret = setsockopt(sockfd, SOL_SOCKET, SO_LINGER, (const char *)&ling, sizeof(ling)); // resolve too many TCP CLOSE_WAIT
 	if (ret == SOCKET_ERROR)
 	{
 		warn("setsockopt SO_LINGER failed: %s\n", sk_strerror(sk_errno()));
@@ -357,7 +357,7 @@ static int rtsp_set_client_socket(SOCKET sockfd)
 #endif
 
 #ifdef __LINUX__
-	int sndbufsiz = 1024 * 512;
+	int sndbufsiz = 10 * 1024 * 1024;
 	int keepalive = 1;
 	int keepidle = 60;
 	int keepinterval = 3;
@@ -385,34 +385,34 @@ static int rtsp_set_client_socket(SOCKET sockfd)
 		warn("setsockopt SO_SNDBUF failed: %s\n", sk_strerror(sk_errno()));
 	}
 
-	ret = setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, (const char *)&keepalive, sizeof(keepalive));
-	if (ret == SOCKET_ERROR)
-	{
-		warn("setsockopt SO_KEEPALIVE failed: %s\n", sk_strerror(sk_errno()));
-	}
+	// ret = setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, (const char *)&keepalive, sizeof(keepalive));
+	// if (ret == SOCKET_ERROR)
+	// {
+	// 	warn("setsockopt SO_KEEPALIVE failed: %s\n", sk_strerror(sk_errno()));
+	// }
 
-	ret = setsockopt(sockfd, SOL_TCP, TCP_KEEPIDLE, (const char *)&keepidle, sizeof(keepidle));
-	if (ret == SOCKET_ERROR)
-	{
-		warn("setsockopt TCP_KEEPIDLE failed: %s\n", sk_strerror(sk_errno()));
-	}
+	// ret = setsockopt(sockfd, SOL_TCP, TCP_KEEPIDLE, (const char *)&keepidle, sizeof(keepidle));
+	// if (ret == SOCKET_ERROR)
+	// {
+	// 	warn("setsockopt TCP_KEEPIDLE failed: %s\n", sk_strerror(sk_errno()));
+	// }
 
-	ret = setsockopt(sockfd, SOL_TCP, TCP_KEEPINTVL, (const char *)&keepinterval, sizeof(keepinterval));
-	if (ret == SOCKET_ERROR)
-	{
-		warn("setsockopt TCP_KEEPINTVL failed: %s\n", sk_strerror(sk_errno()));
-	}
+	// ret = setsockopt(sockfd, SOL_TCP, TCP_KEEPINTVL, (const char *)&keepinterval, sizeof(keepinterval));
+	// if (ret == SOCKET_ERROR)
+	// {
+	// 	warn("setsockopt TCP_KEEPINTVL failed: %s\n", sk_strerror(sk_errno()));
+	// }
 
-	ret = setsockopt(sockfd, SOL_TCP, TCP_KEEPCNT, (const char *)&keepcount, sizeof(keepcount));
-	if (ret == SOCKET_ERROR)
-	{
-		warn("setsockopt TCP_KEEPCNT failed: %s\n", sk_strerror(sk_errno()));
-	}
+	// ret = setsockopt(sockfd, SOL_TCP, TCP_KEEPCNT, (const char *)&keepcount, sizeof(keepcount));
+	// if (ret == SOCKET_ERROR)
+	// {
+	// 	warn("setsockopt TCP_KEEPCNT failed: %s\n", sk_strerror(sk_errno()));
+	// }
 
 	memset(&ling, 0, sizeof(ling));
 	ling.l_onoff = 1;
 	ling.l_linger = 0;
-	ret = setsockopt(sockfd, SOL_SOCKET, SO_LINGER, (const char *)&ling, sizeof(ling)); //resolve too many TCP CLOSE_WAIT
+	ret = setsockopt(sockfd, SOL_SOCKET, SO_LINGER, (const char *)&ling, sizeof(ling)); // resolve too many TCP CLOSE_WAIT
 	if (ret == SOCKET_ERROR)
 	{
 		warn("setsockopt SO_LINGER failed: %s\n", sk_strerror(sk_errno()));
@@ -435,7 +435,7 @@ static struct rtsp_client_connection *rtsp_new_client_connection(struct rtsp_dem
 		return NULL;
 	}
 
-	rtsp_set_client_socket(sockfd); //XXX DEBUG
+	rtsp_set_client_socket(sockfd); // XXX DEBUG
 
 	info("new rtsp client %s:%u comming\n",
 		 inet_ntoa(inaddr.sin_addr), ntohs(inaddr.sin_port));
@@ -565,6 +565,7 @@ fail:
 #define ARTP_PT_ID_PCMU (0)
 #define ARTP_PT_ID_G726 (2)
 #define ARTP_PT_ID_AAC (102)
+#define ARTP_PT_ID_OPUS (111)
 #define VRTSP_SUBPATH "track1"
 #define ARTSP_SUBPATH "track2"
 
@@ -638,6 +639,7 @@ int rtsp_set_audio(rtsp_session_handle session, int codec_id, const uint8_t *cod
 	case RTSP_CODEC_ID_AUDIO_G711U:
 	case RTSP_CODEC_ID_AUDIO_G726:
 	case RTSP_CODEC_ID_AUDIO_AAC:
+	case RTSP_CODEC_ID_AUDIO_OPUS:
 		break;
 	default:
 		err("not supported codec_id %d for audio\n", codec_id);
@@ -646,22 +648,35 @@ int rtsp_set_audio(rtsp_session_handle session, int codec_id, const uint8_t *cod
 
 	s->acodec_id = codec_id;
 	s->artpe.pt = ARTP_PT_ID;
-	if (RTSP_CODEC_ID_AUDIO_G711A == codec_id){
+	if (RTSP_CODEC_ID_AUDIO_G711A == codec_id)
+	{
 		s->artpe.pt = ARTP_PT_ID_PCMA;
 	}
-	if (RTSP_CODEC_ID_AUDIO_G711U == codec_id){
+	if (RTSP_CODEC_ID_AUDIO_G711U == codec_id)
+	{
 		s->artpe.pt = ARTP_PT_ID_PCMU;
 	}
-	if (RTSP_CODEC_ID_AUDIO_G726 == codec_id){
+	if (RTSP_CODEC_ID_AUDIO_G726 == codec_id)
+	{
 		s->artpe.pt = ARTP_PT_ID_G726;
 	}
-	if (RTSP_CODEC_ID_AUDIO_AAC == codec_id){
+	if (RTSP_CODEC_ID_AUDIO_AAC == codec_id)
+	{
 		s->artpe.pt = ARTP_PT_ID_AAC;
+	}
+	if (RTSP_CODEC_ID_AUDIO_OPUS == codec_id)
+	{
+		s->artpe.pt = ARTP_PT_ID_OPUS;
 	}
 	s->artpe.seq = 0;
 	s->artpe.ssrc = 0;
 	s->artpe.sample_rate = 8000;
 	memset(&s->acodec_data, 0, sizeof(s->acodec_data));
+
+	if (RTSP_CODEC_ID_AUDIO_OPUS == codec_id)
+	{
+		s->artpe.sample_rate = 48000;
+	}
 
 	if (codec_data && data_len > 0)
 	{
@@ -784,6 +799,9 @@ static int build_simple_sdp(struct rtsp_session *s, const char *uri, char *sdpbu
 		case RTSP_CODEC_ID_AUDIO_AAC:
 			p += rtsp_build_sdp_media_attr_aac(ARTP_PT_ID_AAC, s->artpe.sample_rate, &s->acodec_data.aac, p, maxlen - (p - sdpbuf));
 			break;
+		case RTSP_CODEC_ID_AUDIO_OPUS:
+			p += rtsp_build_sdp_media_attr_opus(ARTP_PT_ID_OPUS, s->artpe.sample_rate, p, maxlen - (p - sdpbuf));
+			break;
 		}
 		if (uri)
 			p += sprintf(p, "a=control:%s/%s\r\n", uri, ARTSP_SUBPATH);
@@ -828,7 +846,7 @@ static int rtsp_handle_DESCRIBE(struct rtsp_client_connection *cc, const rtsp_ms
 		return 0;
 	}
 
-	//check auth
+	// check auth
 	if (strlen(s->username) != 0 && strlen(s->password) != 0)
 	{
 		if (!reqmsg->hdrs.authorization)
@@ -839,7 +857,7 @@ static int rtsp_handle_DESCRIBE(struct rtsp_client_connection *cc, const rtsp_ms
 		}
 	}
 
-	//build uri
+	// build uri
 	if (puri->scheme == RTSP_MSG_URI_SCHEME_RTSPU)
 		strcat(uri, "rtspu://");
 	else
@@ -1275,7 +1293,7 @@ static int rtsp_process_request(struct rtsp_client_connection *cc, const rtsp_ms
 		__client_connection_bind_session(cc, s);
 	}
 
-	//check auth
+	// check auth
 	if (s)
 	{
 		if (strlen(s->username) != 0 && strlen(s->password) != 0)
@@ -1381,7 +1399,7 @@ static int rtsp_recv_msg(struct rtsp_client_connection *cc, rtsp_msg_s *msg)
 		return 0;
 	}
 
-	//dbg("recv %d bytes rtsp message from %s\n", ret, inet_ntoa(cc->peer_addr));
+	// dbg("recv %d bytes rtsp message from %s\n", ret, inet_ntoa(cc->peer_addr));
 
 	memmove(cc->reqbuf, cc->reqbuf + ret, cc->reqlen - ret);
 	cc->reqlen -= ret;
@@ -1405,7 +1423,7 @@ static int rtsp_send_msg(struct rtsp_client_connection *cc, rtsp_msg_s *msg)
 		return -1;
 	}
 
-	//dbg("sent %d bytes rtsp message to %s\n", ret, inet_ntoa(cc->peer_addr));
+	// dbg("sent %d bytes rtsp message to %s\n", ret, inet_ntoa(cc->peer_addr));
 	return ret;
 }
 
@@ -1428,7 +1446,7 @@ static int rtsp_recv_rtp_over_udp(struct rtsp_client_connection *cc, int isaudio
 		return 0;
 	}
 
-	//dbg("rtp over udp recv %d bytes from %s\n", len, inet_ntoa(rtp->peer_addr));
+	// dbg("rtp over udp recv %d bytes from %s\n", len, inet_ntoa(rtp->peer_addr));
 
 	if (rtp->udp_peerport[0] != ntohs(inaddr.sin_port))
 	{
@@ -1437,7 +1455,7 @@ static int rtsp_recv_rtp_over_udp(struct rtsp_client_connection *cc, int isaudio
 		rtp->udp_peerport[0] = ntohs(inaddr.sin_port);
 	}
 
-	//TODO process rtp frame
+	// TODO process rtp frame
 	return len;
 }
 
@@ -1460,7 +1478,7 @@ static int rtsp_recv_rtcp_over_udp(struct rtsp_client_connection *cc, int isaudi
 		return 0;
 	}
 
-	//dbg("rtcp over udp recv %d bytes from %s\n", len, inet_ntoa(rtp->peer_addr));
+	// dbg("rtcp over udp recv %d bytes from %s\n", len, inet_ntoa(rtp->peer_addr));
 
 	if (rtp->udp_peerport[1] != ntohs(inaddr.sin_port))
 	{
@@ -1469,7 +1487,7 @@ static int rtsp_recv_rtcp_over_udp(struct rtsp_client_connection *cc, int isaudi
 		rtp->udp_peerport[1] = ntohs(inaddr.sin_port);
 	}
 
-	//TODO process rtcp frame
+	// TODO process rtcp frame
 	return len;
 }
 
@@ -1479,7 +1497,7 @@ static int rtp_tx_data(struct rtp_connection *c, const uint8_t *data, int size)
 	{
 		SOCKET sockfd = c->tcp_sockfd;
 		int ret = -1;
-#if 0 //XXX
+#if 0 // XXX
 		uint8_t szbuf[RTP_MAX_PKTSIZ + 4];
 		sockfd = c->tcp_sockfd;
 		szbuf[0] = '$';
@@ -1552,8 +1570,8 @@ static int rtsp_tx_video_packet(struct rtsp_client_connection *cc)
 	int *ppktlen = NULL;
 	int count = 0;
 
-	/*dbg("index=%d head=%d tail=%d used=%d\n", 
-		rtp->streamq_index, 
+	/*dbg("index=%d head=%d tail=%d used=%d\n",
+		rtp->streamq_index,
 		streamq_head(q),
 		streamq_tail(q),
 		streamq_inused(q, rtp->streamq_index));*/
@@ -1564,14 +1582,14 @@ static int rtsp_tx_video_packet(struct rtsp_client_connection *cc)
 
 		if (*ppktlen > 0)
 		{
-			*((uint32_t *)(&ppacket[8])) = htonl(rtp->ssrc); //modify ssrc
+			*((uint32_t *)(&ppacket[8])) = htonl(rtp->ssrc); // modify ssrc
 			if (rtp_tx_data(rtp, ppacket, *ppktlen) != *ppktlen)
 			{
 				break;
 			}
 
 			rtp->rtcp_packet_count++;
-			rtp->rtcp_octet_count += *ppktlen - 12; //XXX
+			rtp->rtcp_octet_count += *ppktlen - 12; // XXX
 		}
 		rtp->streamq_index = streamq_next(q, rtp->streamq_index);
 		count++;
@@ -1596,14 +1614,14 @@ static int rtsp_tx_audio_packet(struct rtsp_client_connection *cc)
 
 		if (*ppktlen > 0)
 		{
-			*((uint32_t *)(&ppacket[8])) = htonl(rtp->ssrc); //modify ssrc
+			*((uint32_t *)(&ppacket[8])) = htonl(rtp->ssrc); // modify ssrc
 			if (rtp_tx_data(rtp, ppacket, *ppktlen) != *ppktlen)
 			{
 				break;
 			}
 
 			rtp->rtcp_packet_count++;
-			rtp->rtcp_octet_count += *ppktlen - 12; //XXX
+			rtp->rtcp_octet_count += *ppktlen - 12; // XXX
 		}
 		rtp->streamq_index = streamq_next(q, rtp->streamq_index);
 		count++;
@@ -1648,7 +1666,7 @@ int rtsp_do_event(rtsp_demo_handle demo)
 
 		if (vrtp && streamq_inused(s->vstreamq, vrtp->streamq_index) > 0)
 		{
-			//add video rtp sock to wfds
+			// add video rtp sock to wfds
 			if (vrtp->is_over_tcp)
 			{
 				FD_SET(vrtp->tcp_sockfd, &wfds);
@@ -1665,7 +1683,7 @@ int rtsp_do_event(rtsp_demo_handle demo)
 
 		if (artp && streamq_inused(s->astreamq, artp->streamq_index) > 0)
 		{
-			//add audio rtp sock to wfds
+			// add audio rtp sock to wfds
 			if (artp->is_over_tcp)
 			{
 				FD_SET(artp->tcp_sockfd, &wfds);
@@ -1682,7 +1700,7 @@ int rtsp_do_event(rtsp_demo_handle demo)
 
 		if (vrtp && (!vrtp->is_over_tcp))
 		{
-			//add video rtcp sock to rfds
+			// add video rtcp sock to rfds
 			FD_SET(vrtp->udp_sockfd[0], &rfds);
 			FD_SET(vrtp->udp_sockfd[1], &rfds);
 			if (vrtp->udp_sockfd[0] > maxfd)
@@ -1693,7 +1711,7 @@ int rtsp_do_event(rtsp_demo_handle demo)
 
 		if (artp && (!artp->is_over_tcp))
 		{
-			//add audio rtcp sock to rfds
+			// add audio rtcp sock to rfds
 			FD_SET(artp->udp_sockfd[0], &rfds);
 			FD_SET(artp->udp_sockfd[1], &rfds);
 			if (artp->udp_sockfd[0] > maxfd)
@@ -1720,11 +1738,11 @@ int rtsp_do_event(rtsp_demo_handle demo)
 
 	if (FD_ISSET(d->sockfd, &rfds))
 	{
-		//new client_connection
+		// new client_connection
 		rtsp_new_client_connection(d);
 	}
 
-	cc = TAILQ_FIRST(&d->connections_qhead); //NOTE do not use TAILQ_FOREACH
+	cc = TAILQ_FIRST(&d->connections_qhead); // NOTE do not use TAILQ_FOREACH
 	while (cc)
 	{
 		struct rtsp_client_connection *cc1 = cc;
@@ -1753,7 +1771,7 @@ int rtsp_do_event(rtsp_demo_handle demo)
 
 				if (reqmsg.type == RTSP_MSG_TYPE_INTERLEAVED)
 				{
-					//TODO process RTCP over TCP frame
+					// TODO process RTCP over TCP frame
 					rtsp_msg_free(&reqmsg);
 					continue;
 				}
@@ -1788,37 +1806,37 @@ int rtsp_do_event(rtsp_demo_handle demo)
 
 		if (vrtp && streamq_inused(s->vstreamq, vrtp->streamq_index) > 0)
 		{
-			//send rtp video packet
+			// send rtp video packet
 			if (vrtp->is_over_tcp && FD_ISSET(vrtp->tcp_sockfd, &wfds))
 			{
 				rtsp_tx_video_packet(cc1);
-				//printf("v");fflush(stdout);
+				// printf("v");fflush(stdout);
 			}
 			else if ((!vrtp->is_over_tcp) && FD_ISSET(vrtp->udp_sockfd[0], &wfds))
 			{
 				rtsp_tx_video_packet(cc1);
-				//printf("v");fflush(stdout);
+				// printf("v");fflush(stdout);
 			}
 		}
 
 		if (artp && streamq_inused(s->astreamq, artp->streamq_index) > 0)
 		{
-			//send rtp audio packet
+			// send rtp audio packet
 			if (artp->is_over_tcp && FD_ISSET(artp->tcp_sockfd, &wfds))
 			{
 				rtsp_tx_audio_packet(cc1);
-				//printf("a");fflush(stdout);
+				// printf("a");fflush(stdout);
 			}
 			else if (0 == artp->is_over_tcp && FD_ISSET(artp->udp_sockfd[0], &wfds))
 			{
 				rtsp_tx_audio_packet(cc1);
-				//printf("a");fflush(stdout);
+				// printf("a");fflush(stdout);
 			}
 		}
 
 		if (vrtp && (!vrtp->is_over_tcp))
 		{
-			//process video rtcp socket
+			// process video rtcp socket
 			if (FD_ISSET(vrtp->udp_sockfd[0], &rfds))
 			{
 				rtsp_recv_rtp_over_udp(cc1, 0);
@@ -1830,7 +1848,7 @@ int rtsp_do_event(rtsp_demo_handle demo)
 		}
 		if (artp && (!artp->is_over_tcp))
 		{
-			//process audio rtcp socket
+			// process audio rtcp socket
 			if (FD_ISSET(artp->udp_sockfd[0], &rfds))
 			{
 				rtsp_recv_rtp_over_udp(cc1, 1);
@@ -1860,7 +1878,7 @@ int rtsp_tx_video(rtsp_session_handle session, const uint8_t *frame, int len, ui
 	if (!s || !frame || s->vcodec_id == RTSP_CODEC_ID_NONE)
 		return -1;
 
-	//get free buffer
+	// get free buffer
 	q = s->vstreamq;
 	index = streamq_tail(q);
 	for (i = 0; i < VRTP_MAX_NBPKTS; i++)
@@ -1874,7 +1892,7 @@ int rtsp_tx_video(rtsp_session_handle session, const uint8_t *frame, int len, ui
 	packets[i] = NULL;
 	pktsizs[i] = 0;
 
-	//move all slow rtp connections streamq_index to queue tail
+	// move all slow rtp connections streamq_index to queue tail
 	TAILQ_FOREACH(cc, &s->connections_qhead, session_entry)
 	{
 		struct rtp_connection *rtp = cc->vrtp;
@@ -1890,7 +1908,7 @@ int rtsp_tx_video(rtsp_session_handle session, const uint8_t *frame, int len, ui
 	switch (s->vcodec_id)
 	{
 	case RTSP_CODEC_ID_VIDEO_H264:
-		if (s->vcodec_data.h264.pps_len == 0 || s->vcodec_data.h264.pps_len == 0)
+		if (s->vcodec_data.h264.sps_len == 0 || s->vcodec_data.h264.pps_len == 0)
 		{
 			if (rtsp_codec_data_parse_from_frame_h264(frame, len, &s->vcodec_data.h264) < 0)
 			{
@@ -1904,7 +1922,7 @@ int rtsp_tx_video(rtsp_session_handle session, const uint8_t *frame, int len, ui
 		}
 		break;
 	case RTSP_CODEC_ID_VIDEO_H265:
-		if (s->vcodec_data.h265.pps_len == 0 || s->vcodec_data.h265.pps_len == 0 || s->vcodec_data.h265.vps_len == 0)
+		if (s->vcodec_data.h265.vps_len == 0 || s->vcodec_data.h265.sps_len == 0 || s->vcodec_data.h265.pps_len == 0)
 		{
 			if (rtsp_codec_data_parse_from_frame_h265(frame, len, &s->vcodec_data.h265) < 0)
 			{
@@ -1933,7 +1951,7 @@ int rtsp_tx_video(rtsp_session_handle session, const uint8_t *frame, int len, ui
 			warn("not found nal header\n");
 			break;
 		}
-		//dbg("size:%d\n", size);
+		// dbg("size:%d\n", size);
 
 		switch (s->vcodec_id)
 		{
@@ -1965,7 +1983,7 @@ int rtsp_tx_video(rtsp_session_handle session, const uint8_t *frame, int len, ui
 		streamq_push(q);
 	}
 
-	//first send
+	// first send
 	TAILQ_FOREACH(cc, &s->connections_qhead, session_entry)
 	{
 		struct rtp_connection *rtp = cc->vrtp;
@@ -1992,7 +2010,7 @@ int rtsp_tx_audio(rtsp_session_handle session, const uint8_t *frame, int len, ui
 	if (!s || !frame || s->acodec_id == RTSP_CODEC_ID_NONE)
 		return -1;
 
-	//get free buffer
+	// get free buffer
 	q = s->astreamq;
 	index = streamq_tail(q);
 	for (i = 0; i < ARTP_MAX_NBPKTS; i++)
@@ -2006,7 +2024,7 @@ int rtsp_tx_audio(rtsp_session_handle session, const uint8_t *frame, int len, ui
 	packets[i] = NULL;
 	pktsizs[i] = 0;
 
-	//move all slow rtp connections streamq_index to queue tail
+	// move all slow rtp connections streamq_index to queue tail
 	TAILQ_FOREACH(cc, &s->connections_qhead, session_entry)
 	{
 		struct rtp_connection *rtp = cc->artp;
@@ -2058,6 +2076,14 @@ int rtsp_tx_audio(rtsp_session_handle session, const uint8_t *frame, int len, ui
 			return -1;
 		}
 		break;
+	case RTSP_CODEC_ID_AUDIO_OPUS:
+		count = rtp_enc_opus(&s->artpe, frame, len, ts, packets, pktsizs);
+		if (count <= 0)
+		{
+			err("rtp_enc_opus ret = %d\n", count);
+			return -1;
+		}
+		break;
 	}
 
 	for (i = 0; i < count; i++)
@@ -2066,7 +2092,7 @@ int rtsp_tx_audio(rtsp_session_handle session, const uint8_t *frame, int len, ui
 		streamq_push(q);
 	}
 
-	//first send
+	// first send
 	TAILQ_FOREACH(cc, &s->connections_qhead, session_entry)
 	{
 		struct rtp_connection *rtp = cc->artp;
@@ -2080,7 +2106,7 @@ int rtsp_tx_audio(rtsp_session_handle session, const uint8_t *frame, int len, ui
 	return len;
 }
 
-//return us from system running
+// return us from system running
 uint64_t rtsp_get_reltime(void)
 {
 #ifdef __WIN32__
@@ -2093,7 +2119,7 @@ uint64_t rtsp_get_reltime(void)
 #endif
 }
 
-//return us from 1970/1/1 00:00:00
+// return us from 1970/1/1 00:00:00
 static uint64_t rtsp_get_abstime(void)
 {
 #ifdef __WIN32__
@@ -2110,7 +2136,7 @@ static uint64_t rtsp_get_abstime(void)
 #endif
 }
 
-//return us from 1900/1/1 00:00:00
+// return us from 1900/1/1 00:00:00
 uint64_t rtsp_get_ntptime(void)
 {
 #define NTP_OFFSET_US (2208988800000000ULL)
@@ -2124,7 +2150,7 @@ int rtsp_sync_video_ts(rtsp_session_handle session, uint64_t ts, uint64_t ntptim
 	if (!s || s->vcodec_id == RTSP_CODEC_ID_NONE)
 		return -1;
 
-	s->video_ntptime_of_zero_ts = ntptime - ts; //XXX
+	s->video_ntptime_of_zero_ts = ntptime - ts; // XXX
 	return 0;
 }
 
@@ -2135,7 +2161,7 @@ int rtsp_sync_audio_ts(rtsp_session_handle session, uint64_t ts, uint64_t ntptim
 	if (!s || s->acodec_id == RTSP_CODEC_ID_NONE)
 		return -1;
 
-	s->audio_ntptime_of_zero_ts = ntptime - ts; //XXX
+	s->audio_ntptime_of_zero_ts = ntptime - ts; // XXX
 	return 0;
 }
 

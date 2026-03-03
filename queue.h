@@ -89,8 +89,7 @@
 
 #define LIST_HEAD_INITIALIZER(head) \
 	{                               \
-		NULL                        \
-	}
+		NULL}
 
 #define LIST_ENTRY(type)                                              \
 	struct                                                            \
@@ -168,8 +167,7 @@
 
 #define SLIST_HEAD_INITIALIZER(head) \
 	{                                \
-		NULL                         \
-	}
+		NULL}
 
 #define SLIST_ENTRY(type)                         \
 	struct                                        \
@@ -245,8 +243,7 @@
 
 #define STAILQ_HEAD_INITIALIZER(head) \
 	{                                 \
-		NULL, &(head).stqh_first      \
-	}
+		NULL, &(head).stqh_first}
 
 #define STAILQ_ENTRY(type)                         \
 	struct                                         \
@@ -348,8 +345,7 @@
 
 #define SIMPLEQ_HEAD_INITIALIZER(head) \
 	{                                  \
-		NULL, &(head).sqh_first        \
-	}
+		NULL, &(head).sqh_first}
 
 #define SIMPLEQ_ENTRY(type)                       \
 	struct                                        \
@@ -441,8 +437,7 @@
 
 #define TAILQ_HEAD_INITIALIZER(head) \
 	{                                \
-		NULL, &(head).tqh_first      \
-	}
+		NULL, &(head).tqh_first}
 
 #define _TAILQ_ENTRY(type, qual)                                          \
 	struct                                                                \
@@ -561,8 +556,7 @@
 
 #define CIRCLEQ_HEAD_INITIALIZER(head) \
 	{                                  \
-		(void *)&head, (void *)&head   \
-	}
+		(void *)&head, (void *)&head}
 
 #define CIRCLEQ_ENTRY(type)                           \
 	struct                                            \

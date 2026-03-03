@@ -5,24 +5,24 @@
 
 #define __LINUX__ 1
 
-#define dbg(fmt, ...)                                                                     \
-	do                                                                                    \
-	{                                                                                     \
+#define dbg(fmt, ...)                                                        \
+	do                                                                       \
+	{                                                                        \
 		printf("[DEBUG %s:%d] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
 	} while (0)
-#define info(fmt, ...)                                                                    \
-	do                                                                                    \
-	{                                                                                     \
+#define info(fmt, ...)                                                       \
+	do                                                                       \
+	{                                                                        \
 		printf("[INFO  %s:%d] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
 	} while (0)
-#define warn(fmt, ...)                                                                    \
-	do                                                                                    \
-	{                                                                                     \
+#define warn(fmt, ...)                                                      \
+	do                                                                      \
+	{                                                                       \
 		printf("[WARN %s:%d] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
 	} while (0)
-#define err(fmt, ...)                                                                     \
-	do                                                                                    \
-	{                                                                                     \
+#define err(fmt, ...)                                                        \
+	do                                                                       \
+	{                                                                        \
 		printf("[ERROR %s:%d] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
 	} while (0)
 

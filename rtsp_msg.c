@@ -241,7 +241,7 @@ static int rtsp_msg_parse_uri(const char *line, rtsp_msg_uri_s *uri)
 		err("parse scheme failed. line: %s\n", line);
 		return -1;
 	}
-	uri->port = 0; //default
+	uri->port = 0; // default
 	uri->ipaddr[0] = 0;
 	uri->abspath[0] = 0;
 
@@ -304,7 +304,7 @@ static int rtsp_msg_build_uri(const rtsp_msg_uri_s *uri, char *line, int size)
 	return strlen(line);
 }
 
-//return 0. if success
+// return 0. if success
 static int rtsp_msg_parse_startline(rtsp_msg_s *msg, const char *line)
 {
 	const char *p = line;
@@ -317,13 +317,13 @@ static int rtsp_msg_parse_startline(rtsp_msg_s *msg, const char *line)
 		msg->hdrs.startline.reqline.method = (rtsp_msg_method_e)ret;
 		while (isgraph(*p))
 			p++;
-		p++; //next field
+		p++; // next field
 		ret = rtsp_msg_parse_uri(p, &msg->hdrs.startline.reqline.uri);
 		if (ret <= 0)
 			return -1;
 		while (isgraph(*p))
 			p++;
-		p++; //next field
+		p++; // next field
 		ret = rtsp_msg_str2int(rtsp_msg_version_tbl,
 							   ARRAY_SIZE(rtsp_msg_version_tbl), p);
 		if (ret == RTSP_MSG_VERSION_BUTT)
@@ -342,7 +342,7 @@ static int rtsp_msg_parse_startline(rtsp_msg_s *msg, const char *line)
 		msg->hdrs.startline.resline.version = (rtsp_msg_version_e)ret;
 		while (isgraph(*p))
 			p++;
-		p++; //next field
+		p++; // next field
 		if (sscanf(p, "%d", &ret) != 1)
 		{
 			err("parse status-code failed. line: %s\n", line);
@@ -360,7 +360,7 @@ static int rtsp_msg_parse_startline(rtsp_msg_s *msg, const char *line)
 
 	msg->type = RTSP_MSG_TYPE_INTERLEAVED;
 	msg->hdrs.startline.interline.channel = *((uint8_t *)(p + 1));
-	msg->hdrs.startline.interline.length = *((uint16_t *)(p + 2)); //XXX
+	msg->hdrs.startline.interline.length = *((uint16_t *)(p + 2)); // XXX
 	msg->hdrs.startline.interline.reserved = 0;
 	return 0;
 }
@@ -413,7 +413,7 @@ static int rtsp_msg_build_startline(const rtsp_msg_s *msg, char *line, int size)
 	return 0;
 }
 
-//Transport
+// Transport
 static int rtsp_msg_parse_transport(rtsp_msg_s *msg, const char *line)
 {
 	rtsp_msg_hdr_s *hdrs = &msg->hdrs;
@@ -558,18 +558,18 @@ static int rtsp_msg_build_transport(const rtsp_msg_s *msg, char *line, int size)
 	return 0;
 }
 
-//Range
+// Range
 static int rtsp_msg_parse_range(rtsp_msg_s *msg, const char *line)
 {
-	return 0; //TODO
+	return 0; // TODO
 }
 
 static int rtsp_msg_build_range(const rtsp_msg_s *msg, char *line, int size)
 {
-	return 0; //TODO
+	return 0; // TODO
 }
 
-//Authorization
+// Authorization
 static int rtsp_msg_parse_authorization(rtsp_msg_s *msg, const char *line)
 {
 	rtsp_msg_hdr_s *hdrs = &msg->hdrs;
@@ -617,18 +617,18 @@ static int rtsp_msg_build_www_authenticate(const rtsp_msg_s *msg, char *line, in
 	return 0;
 }
 
-//RTP-Info
+// RTP-Info
 static int rtsp_msg_parse_rtp_info(rtsp_msg_s *msg, const char *line)
 {
-	return 0; //TODO
+	return 0; // TODO
 }
 
 static int rtsp_msg_build_rtp_info(const rtsp_msg_s *msg, char *line, int size)
 {
-	return 0; //TODO
+	return 0; // TODO
 }
 
-//link CSeq/Session int
+// link CSeq/Session int
 #define DEFINE_PARSE_BUILD_LINK_CSEQ(_name, _type, _param, _fmt)                   \
 	static int rtsp_msg_parse_##_name(rtsp_msg_s *msg, const char *line)           \
 	{                                                                              \
@@ -667,7 +667,7 @@ DEFINE_PARSE_BUILD_LINK_CSEQ(cseq, rtsp_msg_cseq_s, cseq, "CSeq: %u")
 DEFINE_PARSE_BUILD_LINK_CSEQ(session, rtsp_msg_session_s, session, "Session: %08X")
 DEFINE_PARSE_BUILD_LINK_CSEQ(content_length, rtsp_msg_content_length_s, length, "Content-Length: %u")
 
-//link Server/User-Agent char[]
+// link Server/User-Agent char[]
 #define DEFINE_PARSE_BUILD_LINK_SERVER(_name, _type, _param, _fmt)                 \
 	static int rtsp_msg_parse_##_name(rtsp_msg_s *msg, const char *line)           \
 	{                                                                              \
@@ -718,7 +718,7 @@ DEFINE_PARSE_BUILD_LINK_SERVER(server, rtsp_msg_server_s, server, "Server: %s")
 DEFINE_PARSE_BUILD_LINK_SERVER(user_agent, rtsp_msg_user_agent_s, user_agent, "User-Agent: %s")
 DEFINE_PARSE_BUILD_LINK_SERVER(date, rtsp_msg_date_s, http_date, "Date: %s")
 
-//link Content-Type
+// link Content-Type
 #define DEFINE_PARSE_BUILD_LINK_CONTENT_TYPE(_name, _type, _param, _fmt, _tbl)     \
 	static int rtsp_msg_parse_##_name(rtsp_msg_s *msg, const char *line)           \
 	{                                                                              \
@@ -781,7 +781,7 @@ DEFINE_PARSE_BUILD_LINK_SERVER(date, rtsp_msg_date_s, http_date, "Date: %s")
 
 DEFINE_PARSE_BUILD_LINK_CONTENT_TYPE(content_type, rtsp_msg_content_type_s, type, "Content-Type: %s", rtsp_msg_content_type_tbl)
 
-//link Public/Accept
+// link Public/Accept
 #define DEFINE_PARSE_BUILD_LINK_PUBLIC(_name, _type, _param, _fmt, _tbl)           \
 	static int rtsp_msg_parse_##_name(rtsp_msg_s *msg, const char *line)           \
 	{                                                                              \
@@ -937,7 +937,7 @@ int rtsp_msg_init(rtsp_msg_s *msg)
 	return 0;
 }
 
-//free all msg elements. not free msg
+// free all msg elements. not free msg
 void rtsp_msg_free(rtsp_msg_s *msg)
 {
 	if (msg->hdrs.cseq)
@@ -960,7 +960,7 @@ void rtsp_msg_free(rtsp_msg_s *msg)
 
 	if (msg->hdrs.public_)
 		rtsp_mem_free(msg->hdrs.public_);
-	//TODO free rtp-info
+	// TODO free rtp-info
 	if (msg->hdrs.server)
 		rtsp_mem_free(msg->hdrs.server);
 
@@ -980,43 +980,43 @@ void rtsp_msg_free(rtsp_msg_s *msg)
 uint32_t rtsp_msg_gen_session_id(void)
 {
 	static uint32_t session_id = 0x12345678;
-	return session_id++; //FIXME
+	return session_id++; // FIXME
 }
 
-//return frame real size. when frame is completed
-//return 0. when frame size is not enough
-//return -1. when frame is invalid
+// return frame real size. when frame is completed
+// return 0. when frame size is not enough
+// return -1. when frame is invalid
 int rtsp_msg_frame_size(const void *data, int size)
 {
 	const char *frame = (const char *)data;
 	const char *p;
 	int hdrlen = 0, content_len = 0;
 
-	//check first
+	// check first
 	p = strstr(frame, "\r\n");
 	if (!p || size < p - frame + 2)
 	{
 		if (size > 256)
-			return -1; //first line is too large
+			return -1; // first line is too large
 		return 0;
 	}
 
-	//check headers
+	// check headers
 	p = strstr(frame, "\r\n\r\n");
 	if (!p || size < p - frame + 4)
 	{
 		if (size > 1024)
-			return -1; //headers is too large
+			return -1; // headers is too large
 		return 0;
 	}
 	hdrlen = p - frame + 4;
 
-	//get content-length
+	// get content-length
 	p = frame;
 	while ((p = rtsp_msg_hdr_next_line(p, NULL, 0)))
 	{
 		if (strncmp(p, "\r\n", 2) == 0)
-			break; //header end
+			break; // header end
 		if (strncmp(p, "Content-Length", 14) == 0)
 		{
 			if (sscanf(p, "Content-Length: %d", &content_len) != 1)
@@ -1032,9 +1032,9 @@ int rtsp_msg_frame_size(const void *data, int size)
 	return (hdrlen + content_len);
 }
 
-//return data's bytes which is parsed. when success
-//return 0. when data is not enough
-//return -1. when data is invalid
+// return data's bytes which is parsed. when success
+// return 0. when data is not enough
+// return -1. when data is invalid
 int rtsp_msg_parse_from_array(rtsp_msg_s *msg, const void *data, int size)
 {
 	const char *frame = (const char *)data;
@@ -1044,7 +1044,7 @@ int rtsp_msg_parse_from_array(rtsp_msg_s *msg, const void *data, int size)
 
 	memset(msg, 0, sizeof(rtsp_msg_s));
 
-	//interleaved frame
+	// interleaved frame
 	if (frame[0] == '$')
 	{
 		uint16_t interlen = *((uint16_t *)(p + 2));
@@ -1097,7 +1097,7 @@ int rtsp_msg_parse_from_array(rtsp_msg_s *msg, const void *data, int size)
 	}
 	if (!p || strlen(line))
 	{
-		//dbg("p = %p len = %lu\n", p, strlen(line));
+		// dbg("p = %p len = %lu\n", p, strlen(line));
 		rtsp_msg_free(msg);
 		return -1;
 	}
@@ -1113,7 +1113,7 @@ int rtsp_msg_parse_from_array(rtsp_msg_s *msg, const void *data, int size)
 		}
 	}
 
-	//debug
+	// debug
 	ret = p - frame;
 	if (msg->hdrs.content_length)
 		ret += msg->hdrs.content_length->length;
@@ -1125,15 +1125,15 @@ int rtsp_msg_parse_from_array(rtsp_msg_s *msg, const void *data, int size)
 	return size;
 }
 
-//return data's bytes which is used. when success
-//return -1. when failed
+// return data's bytes which is used. when success
+// return -1. when failed
 int rtsp_msg_build_to_array(const rtsp_msg_s *msg, void *data, int size)
 {
 	char *frame = (char *)data;
 	char *p = frame;
 	int len;
 
-	//interleaved frame
+	// interleaved frame
 	if (msg->type == RTSP_MSG_TYPE_INTERLEAVED)
 	{
 		uint8_t hdr[4];
@@ -1202,7 +1202,7 @@ int rtsp_msg_build_to_array(const rtsp_msg_s *msg, void *data, int size)
 			len = size;
 		memcpy(p, msg->body.body, len);
 		p += len;
-		//size -= len;
+		// size -= len;
 	}
 
 	dbg("\n%s", frame);

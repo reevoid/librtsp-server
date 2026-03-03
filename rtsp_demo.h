@@ -2,7 +2,7 @@
 #define __RTSP_DEMO_H__
 /*
  * a simple RTSP server demo
- * RTP over UDP/TCP H264/G711a 
+ * RTP over UDP/TCP H264/G711a
  * */
 
 #include <stdint.h>
@@ -22,12 +22,13 @@ extern "C"
 		RTSP_CODEC_ID_AUDIO_G711U,			/*codec_data is NULL*/
 		RTSP_CODEC_ID_AUDIO_G726,			/*codec_data is bitrate (int)*/
 		RTSP_CODEC_ID_AUDIO_AAC,			/*codec_data is audio specific config (2bytes). frame type is ADTS*/
+		RTSP_CODEC_ID_AUDIO_OPUS,
 	};
 
 	typedef void *rtsp_demo_handle;
 	typedef void *rtsp_session_handle;
 
-	rtsp_demo_handle rtsp_new_demo(int port);
+	rtsp_demo_handle rtsp_new_demo(const char *addr, int port);
 
 	int rtsp_do_event(rtsp_demo_handle demo);
 

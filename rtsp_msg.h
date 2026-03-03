@@ -8,7 +8,7 @@ extern "C"
 {
 #endif
 
-	//RTSP/1.0 Message Parse/Build
+	// RTSP/1.0 Message Parse/Build
 
 	typedef enum __rtsp_msg_type_e
 	{
@@ -75,19 +75,19 @@ extern "C"
 		uint8_t reserved;
 	} rtsp_msg_interleaved_line_s;
 
-	//CSeq g req. all
+	// CSeq g req. all
 	typedef struct __rtsp_msg_cseq_s
 	{
 		uint32_t cseq;
 	} rtsp_msg_cseq_s;
 
-	//Date g opt. all
+	// Date g opt. all
 	typedef struct __rtsp_msg_date_s
 	{
 		char http_date[32];
 	} rtsp_msg_date_s;
 
-	//Session Rr req. all but SETUP,OPTIONS
+	// Session Rr req. all but SETUP,OPTIONS
 	typedef struct __rtsp_msg_session_s
 	{
 		uint32_t session;
@@ -95,12 +95,12 @@ extern "C"
 
 	typedef enum __rtsp_msg_transport_type_e
 	{
-		RTSP_MSG_TRANSPORT_TYPE_RTP_AVP = 0, //RTPoverUDP
-		RTSP_MSG_TRANSPORT_TYPE_RTP_AVP_TCP, //RTPoverTCP
+		RTSP_MSG_TRANSPORT_TYPE_RTP_AVP = 0, // RTPoverUDP
+		RTSP_MSG_TRANSPORT_TYPE_RTP_AVP_TCP, // RTPoverTCP
 		RTSP_MSG_TRANSPORT_TYPE_BUTT,
 	} rtsp_msg_transport_type_e;
 
-	//Transport Rr req. SETUP
+	// Transport Rr req. SETUP
 	typedef struct __rtsp_msg_transport_s
 	{
 		rtsp_msg_transport_type_e type;
@@ -112,7 +112,7 @@ extern "C"
 #define RTSP_MSG_TRANSPORT_FLAG_SERVER_PORT (1 << 4)
 #define RTSP_MSG_TRANSPORT_FLAG_INTERLEAVED (1 << 5)
 		uint32_t ssrc;
-		uint16_t client_port; //rtcp is rtp + 1
+		uint16_t client_port; // rtcp is rtp + 1
 		uint16_t server_port;
 		uint8_t interleaved;
 	} rtsp_msg_transport_s;
@@ -127,26 +127,26 @@ extern "C"
 
 	typedef struct __rtsp_msg_time_smpte_s
 	{
-		//10:07:33:05.01
-		uint32_t seconds;	//10*3600 + 07*60 + 33
-		uint32_t subframes; //05*100 + 01
+		// 10:07:33:05.01
+		uint32_t seconds;	// 10*3600 + 07*60 + 33
+		uint32_t subframes; // 05*100 + 01
 	} rtsp_msg_time_smpte_s;
 
 	typedef struct __rtsp_msg_time_npt_s
 	{
-		//123.45
-		uint32_t secords;  //123
-		uint32_t usecords; //45
+		// 123.45
+		uint32_t secords;  // 123
+		uint32_t usecords; // 45
 	} rtsp_msg_time_npt_s;
 
 	typedef struct __rtsp_msg_time_utc_s
 	{
-		//19961108T142730.25Z
-		uint32_t secords;  //1996/11/08 14:27:30 - 1900/1/1 0:0:0
-		uint32_t usecords; //25
+		// 19961108T142730.25Z
+		uint32_t secords;  // 1996/11/08 14:27:30 - 1900/1/1 0:0:0
+		uint32_t usecords; // 25
 	} rtsp_msg_time_utc_s;
 
-	//Range Rr opt. PLAY,PAUSE,RECORD
+	// Range Rr opt. PLAY,PAUSE,RECORD
 	typedef struct __rtsp_msg_range_s
 	{
 		rtsp_msg_time_type_e type;
@@ -172,7 +172,7 @@ extern "C"
 		RTSP_MSG_CONTENT_TYPE_BUTT,
 	} rtsp_msg_content_type_e;
 
-	//Accept R opt. entity
+	// Accept R opt. entity
 	typedef struct __rtsp_msg_accept_s
 	{
 		uint32_t accept;
@@ -181,14 +181,14 @@ extern "C"
 #define RTSP_MSG_ACCEPT_MHEG (1 << RTSP_MSG_CONTENT_TYPE_MHEG)
 	} rtsp_msg_accept_s;
 
-	//WWW-Authenticate R opt. all
+	// WWW-Authenticate R opt. all
 	typedef struct __rtsp_msg_www_authenticate_s
 	{
 		char realm[64];
 		char nonce[64];
 	} rtsp_msg_www_authenticate_s;
 
-	//Authorization R opt. all
+	// Authorization R opt. all
 	typedef struct __rtsp_msg_authorization_s
 	{
 		char username[64];
@@ -196,13 +196,13 @@ extern "C"
 		char response[64];
 	} rtsp_msg_authorization_s;
 
-	//User-Agent R opt. all
+	// User-Agent R opt. all
 	typedef struct __rtsp_msg_user_agent_s
 	{
 		char user_agent[64];
 	} rtsp_msg_user_agent_s;
 
-	//Public r opt. all
+	// Public r opt. all
 	typedef struct __rtsp_msg_public_s
 	{
 		uint32_t public_;
@@ -230,28 +230,28 @@ extern "C"
 		} param;
 	} rtsp_msg_rtp_subinfo_s;
 
-	//RTP-Info r req. PLAY
+	// RTP-Info r req. PLAY
 	typedef struct __rtsp_msg_rtp_info_s
 	{
 		uint32_t ninfos;
 		rtsp_msg_rtp_subinfo_s **info_array;
 	} rtsp_msg_rtp_info_s;
 
-	//Server r opt. all
+	// Server r opt. all
 	typedef struct __rtsp_msg_server_s
 	{
 		char server[64];
 	} rtsp_msg_server_s;
 
-	//Content-Length e req. SET_PARAMETER,ANNOUNCE
-	//Content-Length e req. entity
+	// Content-Length e req. SET_PARAMETER,ANNOUNCE
+	// Content-Length e req. entity
 	typedef struct __rtsp_msg_content_length_s
 	{
 		uint32_t length;
 	} rtsp_msg_content_length_s;
 
-	//Content-Type e req. SET_PARAMETER,ANNOUNCE
-	//Content-Type r req. entity
+	// Content-Type e req. SET_PARAMETER,ANNOUNCE
+	// Content-Type r req. entity
 	typedef struct __rtsp_msg_content_type_s
 	{
 		rtsp_msg_content_type_e type;
@@ -266,25 +266,25 @@ extern "C"
 			rtsp_msg_interleaved_line_s interline;
 		} startline;
 
-		//general-headers
+		// general-headers
 		rtsp_msg_cseq_s *cseq;
 		rtsp_msg_date_s *date;
 		rtsp_msg_session_s *session;
 		rtsp_msg_transport_s *transport;
 		rtsp_msg_range_s *range;
 
-		//request-headers
+		// request-headers
 		rtsp_msg_accept_s *accept;
 		rtsp_msg_www_authenticate_s *www_authenticate;
 		rtsp_msg_user_agent_s *user_agent;
 
-		//response-headers
+		// response-headers
 		rtsp_msg_public_s *public_;
 		rtsp_msg_rtp_info_s *rtp_info;
 		rtsp_msg_authorization_s *authorization;
 		rtsp_msg_server_s *server;
 
-		//entity-headers
+		// entity-headers
 		rtsp_msg_content_length_s *content_length;
 		rtsp_msg_content_type_s *content_type;
 	} rtsp_msg_hdr_s;
@@ -301,7 +301,7 @@ extern "C"
 		rtsp_msg_body_s body;
 	} rtsp_msg_s;
 
-	//bases
+	// bases
 	void *rtsp_mem_alloc(int size);
 	void rtsp_mem_free(void *ptr);
 	void *rtsp_mem_dup(const void *ptr, int size);
@@ -310,16 +310,16 @@ extern "C"
 	int rtsp_msg_init(rtsp_msg_s *msg);
 	void rtsp_msg_free(rtsp_msg_s *msg);
 
-	//return data's bytes which is parsed. when success
-	//return 0. when data is not enough
-	//return -1. when data is invalid
+	// return data's bytes which is parsed. when success
+	// return 0. when data is not enough
+	// return -1. when data is invalid
 	int rtsp_msg_parse_from_array(rtsp_msg_s *msg, const void *data, int size);
 
-	//return data's bytes which is used. when success
-	//return -1. when failed
+	// return data's bytes which is used. when success
+	// return -1. when failed
 	int rtsp_msg_build_to_array(const rtsp_msg_s *msg, void *data, int size);
 
-	//utils XXX
+	// utils XXX
 	int rtsp_msg_set_request(rtsp_msg_s *msg, rtsp_msg_method_e mt, const char *ipaddr, const char *abspath);
 	int rtsp_msg_set_response(rtsp_msg_s *msg, int status_code);
 	int rtsp_msg_get_cseq(const rtsp_msg_s *msg, uint32_t *cseq);

@@ -51,13 +51,13 @@ void md5(uint8_t *initial_msg, size_t initial_len, uint8_t *out_md5_str)
     h3 = 0x10325476;
 
     // Pre-processing: adding a single 1 bit
-    //append "1" bit to message
+    // append "1" bit to message
     /* Notice: the input bytes are considered as bits strings,
        where the first bit is the most significant bit of the byte.[37] */
 
     // Pre-processing: padding with zeros
-    //append "0" bit until message length in bit ≡ 448 (mod 512)
-    //append length mod (2 pow 64) to message
+    // append "0" bit until message length in bit ≡ 448 (mod 512)
+    // append length mod (2 pow 64) to message
 
     int new_len = ((((initial_len + 8) / 64) + 1) * 64) - 8;
 
@@ -70,7 +70,7 @@ void md5(uint8_t *initial_msg, size_t initial_len, uint8_t *out_md5_str)
     memcpy(msg + new_len, &bits_len, 4); // in bits at the end of the buffer
 
     // Process the message in successive 512-bit chunks:
-    //for each 512-bit chunk of message:
+    // for each 512-bit chunk of message:
     int offset;
     for (offset = 0; offset < new_len; offset += (512 / 8))
     {

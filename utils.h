@@ -56,6 +56,7 @@ extern "C"
 	int rtsp_build_sdp_media_attr_g711u(int pt, int sample_rate, char *sdpbuf, int maxlen);
 	int rtsp_build_sdp_media_attr_g726(int pt, int sample_rate, const struct codec_data_g726 *pst_codec_data, char *sdpbuf, int maxlen);
 	int rtsp_build_sdp_media_attr_aac(int pt, int sample_rate, const struct codec_data_aac *pst_codec_data, char *sdpbuf, int maxlen);
+	int rtsp_build_sdp_media_attr_opus(int pt, int sample_rate, char *sdpbuf, int maxlen);
 
 #ifdef __cplusplus
 }

@@ -38,7 +38,7 @@ int rtp_enc_h264(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t
 	if (!e || !frame || len <= 0 || !packets || !pktsizs)
 		return -1;
 
-	//drop 0001
+	// drop 0001
 	if (frame[0] == 0 && frame[1] == 0 && frame[2] == 1)
 	{
 		frame += 3;
@@ -80,7 +80,7 @@ int rtp_enc_h264(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t
 			int mark = 0;
 			if (count == 0)
 			{
-				frame++; //drop nalu header
+				frame++; // drop nalu header
 				len--;
 			}
 			else if (len <= pktsiz - RTPHDR_SIZE - 2)
@@ -89,16 +89,16 @@ int rtp_enc_h264(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t
 			}
 			hdr->m = mark;
 
-			packets[count][RTPHDR_SIZE + 0] = (nalhdr & 0xe0) | 28; //FU-A
-			packets[count][RTPHDR_SIZE + 1] = (nalhdr & 0x1f);		//FU-A
+			packets[count][RTPHDR_SIZE + 0] = (nalhdr & 0xe0) | 28; // FU-A
+			packets[count][RTPHDR_SIZE + 1] = (nalhdr & 0x1f);		// FU-A
 			if (count == 0)
 			{
-				packets[count][RTPHDR_SIZE + 1] |= 0x80; //S
+				packets[count][RTPHDR_SIZE + 1] |= 0x80; // S
 			}
 
 			if (mark)
 			{
-				packets[count][RTPHDR_SIZE + 1] |= 0x40; //E
+				packets[count][RTPHDR_SIZE + 1] |= 0x40; // E
 				memcpy(packets[count] + RTPHDR_SIZE + 2, frame, len);
 				pktsizs[count] = RTPHDR_SIZE + 2 + len;
 				frame += len;
@@ -126,7 +126,7 @@ int rtp_enc_h265(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t
 	if (!e || !frame || len <= 0 || !packets || !pktsizs)
 		return -1;
 
-	//drop 0001
+	// drop 0001
 	if (frame[0] == 0 && frame[1] == 0 && frame[2] == 1)
 	{
 		frame += 3;
@@ -169,7 +169,7 @@ int rtp_enc_h265(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t
 			int mark = 0;
 			if (count == 0)
 			{
-				frame += 2; //drop nalu header
+				frame += 2; // drop nalu header
 				len -= 2;
 			}
 			else if (len <= pktsiz - RTPHDR_SIZE - 3)
@@ -178,17 +178,17 @@ int rtp_enc_h265(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t
 			}
 			hdr->m = mark;
 
-			packets[count][RTPHDR_SIZE + 0] = (nalhdr[0] & 0x81) | (49 << 1); //FU-A
+			packets[count][RTPHDR_SIZE + 0] = (nalhdr[0] & 0x81) | (49 << 1); // FU-A
 			packets[count][RTPHDR_SIZE + 1] = (nalhdr[1]);
-			packets[count][RTPHDR_SIZE + 2] = ((nalhdr[0] >> 1) & 0x3f); //FU-A
+			packets[count][RTPHDR_SIZE + 2] = ((nalhdr[0] >> 1) & 0x3f); // FU-A
 			if (count == 0)
 			{
-				packets[count][RTPHDR_SIZE + 2] |= 0x80; //S
+				packets[count][RTPHDR_SIZE + 2] |= 0x80; // S
 			}
 
 			if (mark)
 			{
-				packets[count][RTPHDR_SIZE + 2] |= 0x40; //E
+				packets[count][RTPHDR_SIZE + 2] |= 0x40; // E
 				memcpy(packets[count] + RTPHDR_SIZE + 3, frame, len);
 				pktsizs[count] = RTPHDR_SIZE + 3 + len;
 				frame += len;
@@ -216,7 +216,7 @@ int rtp_enc_aac(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t 
 	if (!e || !frame || len <= 0 || !packets || !pktsizs)
 		return -1;
 
-	//drop fff
+	// drop fff
 	if (frame[0] == 0xff && (frame[1] & 0xf0) == 0xf0)
 	{
 		frame += 7;
@@ -283,7 +283,7 @@ int rtp_enc_g711(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t
 		hdr->p = 0;
 		hdr->x = 0;
 		hdr->cc = 0;
-		hdr->m = (e->seq == 0);
+		hdr->m = 0; // Audio packets typically don't use marker bit for G711
 		hdr->pt = e->pt;
 		hdr->seq = htons(e->seq++);
 		hdr->ts = htonl(rtp_ts);
@@ -310,6 +310,11 @@ int rtp_enc_g711(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t
 }
 
 int rtp_enc_g726(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t *packets[], int pktsizs[])
+{
+	return rtp_enc_g711(e, frame, len, ts, packets, pktsizs);
+}
+
+int rtp_enc_opus(rtp_enc *e, const uint8_t *frame, int len, uint64_t ts, uint8_t *packets[], int pktsizs[])
 {
 	return rtp_enc_g711(e, frame, len, ts, packets, pktsizs);
 }
