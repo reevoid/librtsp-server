@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include "comm.h"
-#include "rtsp_server.h"
+#include "rtsp_demo.h"
 #include "rtsp_msg.h"
 #include "rtp_enc.h"
 #include "queue.h"
@@ -241,7 +241,12 @@ static void __client_connection_unbind_session(struct rtsp_client_connection *cc
 	}
 }
 
-rtsp_demo_handle rtsp_new_demo(const char *addr, int port)
+rtsp_demo_handle rtsp_new_demo(int port)
+{
+	return rtsp_new_demo_with_addr("0.0.0.0", port);
+}
+
+rtsp_demo_handle rtsp_new_demo_with_addr(const char *addr, int port)
 {
 	struct rtsp_demo *d = NULL;
 	struct sockaddr_in inaddr;
@@ -304,6 +309,7 @@ rtsp_demo_handle rtsp_new_demo(const char *addr, int port)
 #ifdef __LINUX__
 #include <fcntl.h>
 #include <netinet/tcp.h>
+#include <linux/time.h>
 #endif
 
 static int rtsp_set_client_socket(SOCKET sockfd)
