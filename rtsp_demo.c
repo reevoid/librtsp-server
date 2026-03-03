@@ -309,7 +309,6 @@ rtsp_demo_handle rtsp_new_demo_with_addr(const char *addr, int port)
 #ifdef __LINUX__
 #include <fcntl.h>
 #include <netinet/tcp.h>
-#include <linux/time.h>
 #endif
 
 static int rtsp_set_client_socket(SOCKET sockfd)
@@ -506,7 +505,12 @@ static void rand_str(char *dest, size_t length)
 	*dest = '\0';
 }
 
-rtsp_session_handle rtsp_new_session(rtsp_demo_handle demo, const char *path, const char *username, const char *password)
+rtsp_session_handle rtsp_new_session(rtsp_demo_handle demo, const char *path)
+{
+	return rtsp_new_session_with_auth(demo, path, "", "");
+}
+
+rtsp_session_handle rtsp_new_session_with_auth(rtsp_demo_handle demo, const char *path, const char *username, const char *password)
 {
 	struct rtsp_demo *d = (struct rtsp_demo *)demo;
 	struct rtsp_session *s = NULL;
