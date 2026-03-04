@@ -241,6 +241,11 @@ static void __client_connection_unbind_session(struct rtsp_client_connection *cc
 	}
 }
 
+rtsp_demo_handle create_rtsp_demo(int port)
+{
+	return rtsp_new_demo(port);
+}
+
 rtsp_demo_handle rtsp_new_demo(int port)
 {
 	return rtsp_new_demo_with_addr("0.0.0.0", port);

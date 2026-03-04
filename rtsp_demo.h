@@ -28,6 +28,8 @@ extern "C"
 	typedef void *rtsp_demo_handle;
 	typedef void *rtsp_session_handle;
 
+	rtsp_demo_handle create_rtsp_demo(int port);
+
 	rtsp_demo_handle rtsp_new_demo(int port);
 
 	rtsp_demo_handle rtsp_new_demo_with_addr(const char *addr, int port);
